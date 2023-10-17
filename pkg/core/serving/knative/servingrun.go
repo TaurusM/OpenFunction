@@ -251,20 +251,21 @@ func (r *servingRun) createService(s *openfunction.Serving, cm map[string]string
 	}
 
 	annotations := make(map[string]string)
-	annotations[common.DaprAppID] = fmt.Sprintf("%s-%s", common.GetFunctionName(s), s.Namespace)
-	annotations[common.DaprLogAsJSON] = "true"
-	// The dapr protocol must equal to the protocol of function framework.
-	annotations[common.DaprAppProtocol] = "grpc"
-	// The dapr port must equal the function port.
-	annotations[common.DaprAppPort] = fmt.Sprintf("%d", appPort)
-	annotations[common.DaprMetricsPort] = "19090"
-	annotations = util.AppendLabels(s.Spec.Annotations, annotations)
 
-	if common.NeedCreateDaprSidecar(s) == false {
-		annotations[common.DaprEnabled] = "false"
-	} else {
+	if common.NeedCreateDaprSidecar(s) {
+		annotations[common.DaprAppID] = fmt.Sprintf("%s-%s", common.GetFunctionName(s), s.Namespace)
+		annotations[common.DaprLogAsJSON] = "true"
+		// The dapr protocol must equal to the protocol of function framework.
+		annotations[common.DaprAppProtocol] = "grpc"
+		// The dapr port must equal the function port.
+		annotations[common.DaprAppPort] = fmt.Sprintf("%d", appPort)
+		annotations[common.DaprMetricsPort] = "19090"
 		annotations[common.DaprEnabled] = "true"
+	} else {
+		annotations[common.DaprEnabled] = "false"
 	}
+
+	annotations = util.AppendLabels(s.Spec.Annotations, annotations)
 
 	template := s.Spec.Template
 	if template == nil {
